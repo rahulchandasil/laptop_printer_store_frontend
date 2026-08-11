@@ -7,7 +7,10 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState({
     items: [],
   });
-
+  const cartCount = cart.items.reduce(
+    (total, item) => total + item.quantity,
+    0,
+  );
   // Get the latest user from localStorage
   const getUser = () => {
     try {
@@ -66,10 +69,7 @@ export const CartProvider = ({ children }) => {
     } catch (error) {
       console.error("Add to cart error:", error);
 
-      alert(
-        error.response?.data?.message ||
-          "Failed to add product"
-      );
+      alert(error.response?.data?.message || "Failed to add product");
     }
   };
 
@@ -85,12 +85,9 @@ export const CartProvider = ({ children }) => {
     if (quantity < 1) return;
 
     try {
-      const response = await api.put(
-        `/cart/${user.id}/${productId}`,
-        {
-          quantity,
-        }
-      );
+      const response = await api.put(`/cart/${user.id}/${productId}`, {
+        quantity,
+      });
 
       setCart(response.data.cart);
     } catch (error) {
@@ -108,9 +105,7 @@ export const CartProvider = ({ children }) => {
     }
 
     try {
-      const response = await api.delete(
-        `/cart/${user.id}/${productId}`
-      );
+      const response = await api.delete(`/cart/${user.id}/${productId}`);
 
       setCart(response.data.cart);
     } catch (error) {
@@ -123,6 +118,7 @@ export const CartProvider = ({ children }) => {
       value={{
         cart,
         addToCart,
+        cartCount,
         updateQuantity,
         removeFromCart,
         fetchCart,
