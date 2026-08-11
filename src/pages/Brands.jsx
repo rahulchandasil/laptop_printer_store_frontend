@@ -6,15 +6,19 @@ function Brands() {
   const navigate = useNavigate();
 
   const brands =
-    category === "laptop"
-      ? ["Dell", "HP", "Lenovo"]
-      : ["HP", "Canon", "Epson"];
+    category === "laptop" ? ["Dell", "HP", "Lenovo"] : ["HP", "Canon", "Epson"];
 
   const title =
     category === "laptop"
       ? "Choose Your Laptop Brand"
       : "Choose Your Printer Brand";
-
+  const companyLogos = {
+    Dell: "/logos/dell.png",
+    HP: "/logos/hp.png",
+    Lenovo: "/logos/lenovo.png",
+    Canon: "/logos/canon.png",
+    Epson: "/logos/epson.png",
+  };
   return (
     <div className="min-h-screen bg-slate-50">
       <Navbar />
@@ -28,13 +32,9 @@ function Brands() {
         </button>
 
         <div className="text-center">
-          <p className="text-blue-600 font-semibold uppercase">
-            {category}
-          </p>
+          <p className="text-blue-600 font-semibold uppercase">{category}</p>
 
-          <h1 className="text-4xl font-bold text-slate-900 mt-2">
-            {title}
-          </h1>
+          <h1 className="text-4xl font-bold text-slate-900 mt-2">{title}</h1>
 
           <p className="text-slate-500 mt-3">
             Select a brand to explore its products.
@@ -45,22 +45,20 @@ function Brands() {
           {brands.map((brand) => (
             <div
               key={brand}
-              onClick={() =>
-                navigate(`/products/${category}/${brand}`)
-              }
+              onClick={() => navigate(`/products/${category}/${brand}`)}
               className="bg-white rounded-2xl p-10 shadow-md hover:shadow-xl cursor-pointer transition text-center"
             >
-              <div className="w-24 h-24 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-3xl font-bold text-slate-800">
-                {brand.charAt(0)}
+              <div className="w-24 h-24 mx-auto rounded-full bg-slate-100 flex items-center justify-center overflow-hidden">
+                <img
+                  src={companyLogos[brand]}
+                  alt={`${brand} logo`}
+                  className="w-20 h-20 object-contain"
+                />
               </div>
 
-              <h2 className="text-2xl font-bold mt-6">
-                {brand}
-              </h2>
+              <h2 className="text-2xl font-bold mt-6">{brand}</h2>
 
-              <p className="text-slate-500 mt-2">
-                Explore {brand} products
-              </p>
+              <p className="text-slate-500 mt-2">Explore {brand} products</p>
 
               <button className="mt-6 bg-blue-600 text-white px-5 py-2.5 rounded-lg">
                 View Products
