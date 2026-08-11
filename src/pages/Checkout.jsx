@@ -17,12 +17,18 @@ function Checkout() {
 
   const [loading, setLoading] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  let user = null;
+
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+  } catch (error) {
+    console.error("Invalid user data in localStorage:", error);
+  }
 
   const items = cart?.items || [];
 
   const total = items.reduce((sum, item) => {
-    return sum + item.productId.price * item.quantity;
+    return sum + Number(item.productId?.price || 0) * Number(item.quantity);
   }, 0);
 
   const handleChange = (e) => {
@@ -51,32 +57,37 @@ function Checkout() {
       setLoading(true);
 
       const orderItems = items.map((item) => ({
-        productId: item.productId._id,
-        quantity: item.quantity,
+        productId: item.productId?._id || item.productId,
+        quantity: Number(item.quantity),
       }));
 
-      const response = await api.post("/orders", {
+      const orderPayload = {
         userId: user.id,
         items: orderItems,
-        address: formData.address,
-        mobile: formData.mobile,
-        totalPrice: total,
-      });
+        name: formData.name.trim(),
+        mobile: formData.mobile.trim(),
+        address: formData.address.trim(),
+        totalPrice: Number(total),
+      };
 
-      if (response.data.success) {
+      console.log("Order payload:", orderPayload);
+
+      const response = await api.post("/orders", orderPayload);
+
+      if (response.data.success === true) {
         navigate("/order-success");
       }
-   } catch (error) {
-  console.error("FULL ORDER ERROR:", error);
-  console.log("STATUS:", error.response?.status);
-  console.log("RESPONSE:", error.response?.data);
+    } catch (error) {
+      console.error("FULL ORDER ERROR:", error);
+      console.log("STATUS:", error.response?.status);
+      console.log("RESPONSE:", error.response?.data);
 
-  alert(
-    error.response?.data?.message ||
-      error.response?.data?.error ||
-      "Failed to place order"
-  );
-} finally {
+      alert(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Failed to place order",
+      );
+    } finally {
       setLoading(false);
     }
   };
@@ -88,9 +99,7 @@ function Checkout() {
 
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-3xl font-bold">
-              Your cart is empty
-            </h1>
+            <h1 className="text-3xl font-bold">Your cart is empty</h1>
 
             <button
               onClick={() => navigate("/home")}
@@ -116,26 +125,16 @@ function Checkout() {
           ← Back to Cart
         </button>
 
-        <h1 className="text-4xl font-bold text-slate-900">
-          Checkout
-        </h1>
+        <h1 className="text-4xl font-bold text-slate-900">Checkout</h1>
 
         <div className="grid lg:grid-cols-3 gap-8 mt-10">
-
           {/* Customer Information */}
           <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm p-7">
-            <h2 className="text-2xl font-bold">
-              Delivery Information
-            </h2>
+            <h2 className="text-2xl font-bold">Delivery Information</h2>
 
-            <form
-              onSubmit={handleSubmit}
-              className="mt-6 space-y-5"
-            >
+            <form onSubmit={handleSubmit} className="mt-6 space-y-5">
               <div>
-                <label className="block mb-2 font-medium">
-                  Full Name
-                </label>
+                <label className="block mb-2 font-medium">Full Name</label>
 
                 <input
                   type="text"
@@ -149,9 +148,7 @@ function Checkout() {
               </div>
 
               <div>
-                <label className="block mb-2 font-medium">
-                  Mobile Number
-                </label>
+                <label className="block mb-2 font-medium">Mobile Number</label>
 
                 <input
                   type="tel"
@@ -186,18 +183,14 @@ function Checkout() {
                 disabled={loading}
                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white py-3 rounded-xl font-semibold"
               >
-                {loading
-                  ? "Placing Order..."
-                  : "Place Order"}
+                {loading ? "Placing Order..." : "Place Order"}
               </button>
             </form>
           </div>
 
           {/* Order Summary */}
           <div className="bg-white rounded-2xl shadow-sm p-6 h-fit">
-            <h2 className="text-2xl font-bold">
-              Order Summary
-            </h2>
+            <h2 className="text-2xl font-bold">Order Summary</h2>
 
             <div className="mt-6 space-y-4">
               {items.map((item) => (
@@ -206,9 +199,7 @@ function Checkout() {
                   className="flex justify-between gap-4"
                 >
                   <div>
-                    <p className="font-medium">
-                      {item.productId.name}
-                    </p>
+                    <p className="font-medium">{item.productId.name}</p>
 
                     <p className="text-sm text-slate-500">
                       Qty: {item.quantity}
@@ -217,19 +208,16 @@ function Checkout() {
 
                   <p className="font-semibold">
                     ₹
-                    {(
-                      item.productId.price *
-                      item.quantity
-                    ).toLocaleString("en-IN")}
+                    {(item.productId.price * item.quantity).toLocaleString(
+                      "en-IN",
+                    )}
                   </p>
                 </div>
               ))}
             </div>
 
             <div className="border-t mt-6 pt-5 flex justify-between">
-              <span className="text-lg font-semibold">
-                Total
-              </span>
+              <span className="text-lg font-semibold">Total</span>
 
               <span className="text-2xl font-bold">
                 ₹{total.toLocaleString("en-IN")}
