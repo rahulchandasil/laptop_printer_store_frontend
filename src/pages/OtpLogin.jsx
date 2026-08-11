@@ -11,7 +11,9 @@ function OtpLogin() {
   const [loading, setLoading] = useState(false);
 
   const sendOtp = async () => {
-    if (!email) {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
       alert("Please enter your email");
       return;
     }
@@ -20,12 +22,22 @@ function OtpLogin() {
       setLoading(true);
 
       const response = await api.post("/auth/send-otp", {
-        email,
+        email: normalizedEmail,
       });
 
       alert(response.data.message);
-      setOtpSent(true);
+      if (response.data.success === true) {
+        setEmail(normalizedEmail);
+        setOtpSent(true);
+      }
     } catch (error) {
+      console.error("Send OTP request failed:", {
+        baseURL: api.defaults.baseURL,
+        status: error.response?.status,
+        response: error.response?.data,
+        message: error.message,
+      });
+
       alert(
         error.response?.data?.message ||
           "Failed to send OTP"
