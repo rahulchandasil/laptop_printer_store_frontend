@@ -8,13 +8,33 @@ export const CartProvider = ({ children }) => {
     items: [],
   });
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  // Get the latest user from localStorage
+  const getUser = () => {
+    try {
+      const storedUser = localStorage.getItem("user");
 
+      if (!storedUser) {
+        return null;
+      }
+
+      return JSON.parse(storedUser);
+    } catch (error) {
+      console.error("Invalid user data:", error);
+      return null;
+    }
+  };
+
+  // Fetch cart
   const fetchCart = async () => {
-    if (!user?.id) return;
+    const user = getUser();
+
+    if (!user?.id) {
+      return;
+    }
 
     try {
       const response = await api.get(`/cart/${user.id}`);
+
       setCart(response.data.cart);
     } catch (error) {
       console.error("Failed to fetch cart:", error);
@@ -25,7 +45,10 @@ export const CartProvider = ({ children }) => {
     fetchCart();
   }, []);
 
+  // Add to cart
   const addToCart = async (productId) => {
+    const user = getUser();
+
     if (!user?.id) {
       alert("Please login first");
       return;
@@ -38,15 +61,27 @@ export const CartProvider = ({ children }) => {
       });
 
       setCart(response.data.cart);
+
       alert("Product added to cart");
     } catch (error) {
+      console.error("Add to cart error:", error);
+
       alert(
-        error.response?.data?.message || "Failed to add product"
+        error.response?.data?.message ||
+          "Failed to add product"
       );
     }
   };
 
+  // Update quantity
   const updateQuantity = async (productId, quantity) => {
+    const user = getUser();
+
+    if (!user?.id) {
+      alert("Please login first");
+      return;
+    }
+
     if (quantity < 1) return;
 
     try {
@@ -59,11 +94,19 @@ export const CartProvider = ({ children }) => {
 
       setCart(response.data.cart);
     } catch (error) {
-      console.error(error);
+      console.error("Update cart error:", error);
     }
   };
 
+  // Remove from cart
   const removeFromCart = async (productId) => {
+    const user = getUser();
+
+    if (!user?.id) {
+      alert("Please login first");
+      return;
+    }
+
     try {
       const response = await api.delete(
         `/cart/${user.id}/${productId}`
@@ -71,7 +114,7 @@ export const CartProvider = ({ children }) => {
 
       setCart(response.data.cart);
     } catch (error) {
-      console.error(error);
+      console.error("Remove cart error:", error);
     }
   };
 
