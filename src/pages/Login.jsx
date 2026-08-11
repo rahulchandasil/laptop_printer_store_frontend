@@ -33,9 +33,7 @@ function Login() {
 
       navigate("/home");
     } catch (error) {
-      setError(
-        error.response?.data?.message || "Login failed"
-      );
+      setError(error.response?.data?.message || "Login failed");
     }
   };
 
@@ -46,9 +44,7 @@ function Login() {
           Welcome Back
         </h1>
 
-        <p className="text-center text-slate-500 mt-2">
-          Login to continue
-        </p>
+        <p className="text-center text-slate-500 mt-2">Login to continue</p>
 
         {error && (
           <div className="bg-red-100 text-red-600 p-3 rounded-lg mt-5">
@@ -83,14 +79,18 @@ function Login() {
           >
             Login
           </button>
+          <button
+            type="button"
+            onClick={() => navigate("/otp-login")}
+            className="w-full mt-4 border border-blue-600 text-blue-600 py-3 rounded-xl font-semibold hover:bg-blue-50"
+          >
+            Login with OTP
+          </button>
         </form>
 
         <p className="text-center mt-6 text-slate-600">
           Don't have an account?{" "}
-          <Link
-            to="/register"
-            className="text-blue-600 font-semibold"
-          >
+          <Link to="/register" className="text-blue-600 font-semibold">
             Register
           </Link>
         </p>
