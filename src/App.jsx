@@ -7,7 +7,8 @@ import Brands from "./pages/Brands";
 import Products from "./pages/Products";
 import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
-
+import Checkout from "./pages/Checkout";
+import OrderSuccess from "./pages/OrderSuccess";
 
 function App() {
   return (
@@ -22,8 +23,10 @@ function App() {
         <Route path="/brands/:category" element={<Brands />} />
         <Route path="/products/:category/:brand" element={<Products />} />
         <Route path="/product/:id" element={<ProductDetails />} />
- 
+
         <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/order-success" element={<OrderSuccess />} />
       </Routes>
     </BrowserRouter>
   );
