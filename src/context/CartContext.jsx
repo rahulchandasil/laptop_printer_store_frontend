@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "../services/api";
-
-const CartContext = createContext();
+import { CartContext } from "./cartContext";
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState({
@@ -28,7 +27,7 @@ export const CartProvider = ({ children }) => {
   };
 
   // Fetch cart
-  const fetchCart = async () => {
+  const fetchCart = useCallback(async () => {
     const user = getUser();
 
     if (!user?.id) {
@@ -42,14 +41,18 @@ export const CartProvider = ({ children }) => {
     } catch (error) {
       console.error("Failed to fetch cart:", error);
     }
-  };
-
-  useEffect(() => {
-    fetchCart();
   }, []);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchCart();
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [fetchCart]);
+
   // Add to cart
-  const addToCart = async (productId) => {
+  const addToCart = async (productId, quantity = 1) => {
     const user = getUser();
 
     if (!user?.id) {
@@ -60,7 +63,7 @@ export const CartProvider = ({ children }) => {
     try {
       const response = await api.post(`/cart/${user.id}`, {
         productId,
-        quantity: 1,
+        quantity,
       });
 
       setCart(response.data.cart);
@@ -128,5 +131,3 @@ export const CartProvider = ({ children }) => {
     </CartContext.Provider>
   );
 };
-
-export const useCart = () => useContext(CartContext);
