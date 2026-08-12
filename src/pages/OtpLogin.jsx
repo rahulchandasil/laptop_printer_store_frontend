@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { Mail, KeyRound, AlertCircle, ArrowRight, ArrowLeft } from "lucide-react";
+import { Mail, KeyRound, AlertCircle, ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
 import api from "../services/api";
 
 function OtpLogin() {
@@ -14,6 +14,7 @@ function OtpLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [cooldown, setCooldown] = useState(0);
+  const [success, setSuccess] = useState(false);
   
   const inputRefs = useRef([]);
 
@@ -29,6 +30,15 @@ function OtpLogin() {
 
   const normalizeEmail = (value) => value.trim().toLowerCase();
   const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+  const maskEmail = (email) => {
+    const parts = email.split('@');
+    if (parts.length !== 2) return email;
+    const name = parts[0];
+    const domain = parts[1];
+    if (name.length <= 1) return `*@${domain}`;
+    return `${name[0]}***@${domain}`;
+  };
 
   const sendOtp = async (e) => {
     if (e) e.preventDefault();
@@ -54,7 +64,7 @@ function OtpLogin() {
         setTimeout(() => inputRefs.current[0]?.focus(), 100);
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to send OTP. Please try again.");
+      setError(err.response?.data?.message || "We couldn't send the verification code. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -85,12 +95,15 @@ function OtpLogin() {
       });
 
       if (response.data.success) {
+        setSuccess(true);
         localStorage.setItem("user", JSON.stringify(response.data.user));
-        navigate("/home");
+        // Small delay to show success state before redirecting
+        setTimeout(() => {
+          navigate("/home");
+        }, 1000);
       }
     } catch (err) {
       setError(err.response?.data?.message || "That code isn't correct. Please try again.");
-    } finally {
       setLoading(false);
     }
   };
@@ -152,16 +165,18 @@ function OtpLogin() {
         
         {/* Brand / Logo Area */}
         <div className="mb-8 flex flex-col items-center justify-center text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900 text-white shadow-lg shadow-slate-900/20">
-            {otpSent ? <KeyRound className="h-6 w-6" /> : <Mail className="h-6 w-6" />}
+          <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl shadow-lg transition-colors duration-300 ${success ? 'bg-green-600 text-white shadow-green-600/20' : 'bg-slate-900 text-white shadow-slate-900/20'}`}>
+            {success ? <CheckCircle2 className="h-6 w-6" /> : (otpSent ? <KeyRound className="h-6 w-6" /> : <Mail className="h-6 w-6" />)}
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-950">
-            {otpSent ? "Verify your email" : "Sign in with Email"}
+            {success ? "Login Successful" : (otpSent ? "Verify your email" : "Sign in with Email")}
           </h1>
           <p className="mt-2 text-sm text-slate-500">
-            {otpSent 
-              ? "Enter the 6-digit code sent to your email." 
-              : "We'll send a one-time passcode to your inbox."}
+            {success 
+              ? "Redirecting you to the store..."
+              : (otpSent 
+                  ? "Enter the 6-digit code sent to your email." 
+                  : "We'll send a one-time passcode to your inbox.")}
           </p>
         </div>
 
@@ -232,8 +247,9 @@ function OtpLogin() {
               </form>
             ) : (
               <form onSubmit={verifyOtp} className="space-y-6">
-                <div className="flex items-center justify-center rounded-xl bg-slate-50 px-4 py-3">
-                  <span className="text-sm font-medium text-slate-900">{email}</span>
+                <div className="flex flex-col items-center justify-center rounded-xl bg-slate-50 px-4 py-4 text-center">
+                  <span className="text-sm text-slate-500">We sent a 6-digit verification code to:</span>
+                  <span className="mt-1 font-semibold text-slate-900">{maskEmail(email)}</span>
                 </div>
 
                 <div>
@@ -251,9 +267,10 @@ function OtpLogin() {
                         pattern="\d*"
                         maxLength={1}
                         value={digit}
+                        disabled={success}
                         onChange={(e) => handleOtpChange(index, e.target.value)}
                         onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                        className="h-12 w-10 shrink-0 rounded-xl border-0 bg-slate-50 text-center text-lg font-bold text-slate-900 outline-none ring-1 ring-inset ring-slate-200 transition focus:bg-white focus:ring-2 focus:ring-inset focus:ring-slate-900 sm:h-14 sm:w-12 sm:text-xl"
+                        className="h-12 w-10 shrink-0 rounded-xl border-0 bg-slate-50 text-center text-lg font-bold text-slate-900 outline-none ring-1 ring-inset ring-slate-200 transition focus:bg-white focus:ring-2 focus:ring-inset focus:ring-slate-900 disabled:opacity-50 sm:h-14 sm:w-12 sm:text-xl"
                       />
                     ))}
                   </div>
@@ -261,13 +278,18 @@ function OtpLogin() {
 
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-slate-950 py-3.5 text-sm font-semibold text-white transition-all hover:bg-slate-800 disabled:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
+                  disabled={loading || success}
+                  className={`group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl py-3.5 text-sm font-semibold text-white transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${success ? 'bg-green-600 hover:bg-green-700 focus:ring-green-600' : 'bg-slate-950 hover:bg-slate-800 disabled:bg-slate-500 focus:ring-slate-900'}`}
                 >
                   {loading ? (
                     <>
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
                       Verifying...
+                    </>
+                  ) : success ? (
+                    <>
+                      <CheckCircle2 className="h-4 w-4" />
+                      Verified
                     </>
                   ) : (
                     <>
@@ -280,19 +302,20 @@ function OtpLogin() {
                 <div className="flex items-center justify-between text-sm">
                   <button
                     type="button"
+                    disabled={success}
                     onClick={() => {
                       setOtpSent(false);
                       setOtpArray(new Array(6).fill(""));
                       setError("");
                     }}
-                    className="font-medium text-slate-500 transition hover:text-slate-900"
+                    className="font-medium text-slate-500 transition hover:text-slate-900 disabled:opacity-50"
                   >
                     Change Email
                   </button>
 
                   <button
                     type="button"
-                    disabled={cooldown > 0 || loading}
+                    disabled={cooldown > 0 || loading || success}
                     onClick={handleResendOtp}
                     className="font-medium text-blue-600 transition hover:text-blue-700 disabled:text-slate-400"
                   >
