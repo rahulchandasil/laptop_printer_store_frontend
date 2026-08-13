@@ -55,8 +55,13 @@ function Login() {
 
       const response = await api.post("/auth/login", formData);
       const user = response.data.user;
-      localStorage.setItem("user", JSON.stringify(user));
-      navigate("/home");
+      
+      if (user.name && user.name.trim().length > 0) {
+        localStorage.setItem("user", JSON.stringify(user));
+        navigate("/home");
+      } else {
+        navigate("/complete-profile", { state: { userId: user.id } });
+      }
     } catch (error) {
       setError(error.response?.data?.message || "Email or password is incorrect.");
     } finally {
@@ -70,12 +75,17 @@ function Login() {
       setLoading(true);
 
       const response = await api.post("/auth/google", {
-        credential: credentialResponse.credential, // This is the actual JWT ID token
+        credential: credentialResponse.credential,
       });
 
       const user = response.data.user;
-      localStorage.setItem("user", JSON.stringify(user));
-      navigate("/home");
+      
+      if (user.name && user.name.trim().length > 0) {
+        localStorage.setItem("user", JSON.stringify(user));
+        navigate("/home");
+      } else {
+        navigate("/complete-profile", { state: { userId: user.id } });
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Google Login failed.");
     } finally {

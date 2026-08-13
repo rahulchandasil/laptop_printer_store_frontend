@@ -10,6 +10,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import OtpLogin from "./pages/OtpLogin";
+import CompleteProfile from "./pages/CompleteProfile";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
         <Route path="/order-success" element={<OrderSuccess />} />
 
         <Route path="/otp-login" element={<OtpLogin />} />
+        <Route path="/complete-profile" element={<CompleteProfile />} />
       </Routes>
     </BrowserRouter>
   );

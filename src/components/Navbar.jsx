@@ -87,9 +87,11 @@ function Navbar() {
             <div className="ml-2 flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-3 py-2">
               <UserCircle2 className="h-5 w-5 text-slate-500" />
               <div className="leading-tight">
-                <p className="text-xs text-slate-500">Signed in as</p>
                 <p className="text-sm font-medium text-slate-950">
-                  {user.name || user.email || "User"}
+                  {user.name ? `Hi, ${user.name}` : "User"}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {user.email}
                 </p>
               </div>
             </div>

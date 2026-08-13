@@ -96,10 +96,15 @@ function OtpLogin() {
 
       if (response.data.success) {
         setSuccess(true);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        // Small delay to show success state before redirecting
+        const user = response.data.user;
+        
         setTimeout(() => {
-          navigate("/home");
+          if (user.name && user.name.trim().length > 0) {
+            localStorage.setItem("user", JSON.stringify(user));
+            navigate("/home");
+          } else {
+            navigate("/complete-profile", { state: { userId: user.id } });
+          }
         }, 1000);
       }
     } catch (err) {
