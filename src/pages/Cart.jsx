@@ -30,7 +30,14 @@ function Cart() {
   }, []);
 
   const items = cart?.items || [];
-  const subtotal = items.reduce((sum, item) => sum + item.productId.price * item.quantity, 0);
+  
+  const validItems = items.filter((item) => item?.productId);
+  
+  const subtotal = validItems.reduce((sum, item) => {
+    const price = Number(item?.productId?.price || 0);
+    const quantity = Number(item?.quantity || 0);
+    return sum + price * quantity;
+  }, 0);
 
   const handleUpdateQuantity = async (productId, newQuantity) => {
     if (newQuantity < 1) return;
@@ -106,7 +113,7 @@ function Cart() {
           </Link>
         </div>
 
-        {items.length === 0 ? (
+        {validItems.length === 0 ? (
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -138,7 +145,7 @@ function Cart() {
 
               <div className="divide-y divide-slate-100">
                 <AnimatePresence mode="popLayout">
-                  {items.map((item) => {
+                  {validItems.map((item) => {
                     const product = item.productId;
                     const isUpdating = updatingIds.has(product._id);
                     const isRemoving = removingIds.has(product._id);
@@ -251,7 +258,7 @@ function Cart() {
                   
                   <dl className="space-y-4 text-sm text-slate-600">
                     <div className="flex justify-between">
-                      <dt>Subtotal ({items.length} items)</dt>
+                      <dt>Subtotal ({validItems.length} items)</dt>
                       <dd className="font-medium text-slate-900">₹{subtotal.toLocaleString("en-IN")}</dd>
                     </div>
                     <div className="flex justify-between text-green-600">

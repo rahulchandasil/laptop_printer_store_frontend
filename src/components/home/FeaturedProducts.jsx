@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
-import api from "../../services/api";
 import { useCart } from "../../context/useCart";
 import ProductCard from "../products/ProductCard";
 
@@ -29,32 +28,11 @@ function ProductSkeleton() {
   );
 }
 
-function FeaturedProducts() {
+function FeaturedProducts({ products = [], loading = false }) {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [addingToCart, setAddingToCart] = useState(null);
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        // We fetch generic products, then slice the first 4 for the homepage.
-        const response = await api.get("/products");
-        if (response.data && response.data.products) {
-          setProducts(response.data.products.slice(0, 4));
-        }
-      } catch (err) {
-        console.error("Failed to load featured products:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
 
   const handleAddToCart = async (productId) => {
     try {

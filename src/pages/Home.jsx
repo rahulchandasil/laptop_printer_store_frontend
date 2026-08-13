@@ -1,4 +1,6 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import api from "../services/api";
 import Navbar from "../components/Navbar";
 import HomeHero from "../components/home/HomeHero";
 import SectionHeader from "../components/home/SectionHeader";
@@ -10,6 +12,27 @@ import FeaturedProducts from "../components/home/FeaturedProducts";
 
 function Home() {
   const navigate = useNavigate();
+
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get("/products");
+        if (response.data && response.data.products) {
+          setProducts(response.data.products);
+        }
+      } catch (err) {
+        console.error("Failed to load products:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const categories = [
     {
@@ -42,6 +65,7 @@ function Home() {
         <HomeHero
           onBrowseLaptops={browseLaptops}
           onBrowsePrinters={browsePrinters}
+          heroProducts={products.slice(0, 5)}
         />
 
         <section className="bg-white px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
@@ -69,7 +93,7 @@ function Home() {
         </section>
 
         <div className="bg-slate-50">
-          <FeaturedProducts />
+          <FeaturedProducts products={products.slice(0, 4)} loading={loading} />
         </div>
 
         <div className="bg-white">

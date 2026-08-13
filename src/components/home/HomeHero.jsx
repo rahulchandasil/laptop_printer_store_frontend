@@ -1,9 +1,23 @@
+import { useEffect, useState } from "react";
 import { ArrowRight, Sparkles } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
+import { motion, useReducedMotion, AnimatePresence } from "motion/react";
 import heroImage from "../../assets/hero.png";
 
-function HomeHero({ onBrowseLaptops, onBrowsePrinters }) {
+function HomeHero({ onBrowseLaptops, onBrowsePrinters, heroProducts = [] }) {
   const shouldReduceMotion = useReducedMotion();
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (!heroProducts || heroProducts.length <= 1) return;
+
+    const timer = setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % heroProducts.length);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [currentIndex, heroProducts]);
+
+  const currentProduct = heroProducts && heroProducts.length > 0 ? heroProducts[currentIndex] : null;
 
   return (
     <section className="relative overflow-hidden bg-slate-50">
@@ -75,16 +89,44 @@ function HomeHero({ onBrowseLaptops, onBrowsePrinters }) {
         >
           {/* Main Hero Image */}
           <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/50">
-            <div className="aspect-[4/3] w-full bg-slate-100/50 p-8">
-              <img
-                src={heroImage}
-                alt="Premium laptop and printer setup"
-                className="h-full w-full object-contain drop-shadow-xl transition-transform duration-700 hover:scale-105"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.parentElement.innerHTML = '<div class="flex h-full items-center justify-center text-slate-400">Hero Image</div>';
-                }}
-              />
+            <div className="relative aspect-[4/3] w-full bg-slate-100/50 p-8">
+              {currentProduct ? (
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentProduct._id}
+                    initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
+                    animate={shouldReduceMotion ? undefined : { opacity: 1, scale: 1, y: 0 }}
+                    exit={shouldReduceMotion ? false : { opacity: 0, scale: 1.05, y: -10 }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                    className="absolute inset-0 flex flex-col items-center justify-center p-8"
+                  >
+                    <img
+                      src={currentProduct.image}
+                      alt={currentProduct.name}
+                      className="h-full w-full object-contain drop-shadow-xl"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.parentElement.innerHTML = '<div class="flex h-full items-center justify-center text-slate-400">Image Unavailable</div>';
+                      }}
+                    />
+                    <div className="absolute bottom-6 left-6 right-6 flex justify-center">
+                      <span className="inline-block rounded-full bg-white/90 px-4 py-2 text-sm font-bold text-slate-900 shadow-sm backdrop-blur">
+                        {currentProduct.name}
+                      </span>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              ) : (
+                <img
+                  src={heroImage}
+                  alt="Premium laptop and printer setup"
+                  className="h-full w-full object-contain drop-shadow-xl transition-transform duration-700 hover:scale-105"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = '<div class="flex h-full items-center justify-center text-slate-400">Hero Image</div>';
+                  }}
+                />
+              )}
             </div>
             
             {/* Floating feature badge */}

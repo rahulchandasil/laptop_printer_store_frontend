@@ -3,32 +3,72 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Minus, Plus, ShoppingCart, ChevronRight, 
-  ShieldCheck, RotateCcw, Truck, AlertCircle, ArrowLeft 
+  ShieldCheck, RotateCcw, Truck, AlertCircle, ArrowLeft,
+  Heart, Cpu, HardDrive, Monitor, Palette, Box, Activity, Printer, Wifi, Maximize, Scan 
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import api from "../services/api";
 import { useCart } from "../context/useCart";
+import ProductCard from "../components/products/ProductCard";
+
+const getIconForKey = (key) => {
+  const k = key.toLowerCase();
+  if (k.includes("processor") || k.includes("cpu")) return Cpu;
+  if (k.includes("system") || k.includes("os")) return Box;
+  if (k.includes("graphic") || k.includes("gpu")) return Activity;
+  if (k.includes("memory") || k.includes("ram")) return HardDrive;
+  if (k.includes("storage") || k.includes("ssd") || k.includes("hdd")) return HardDrive;
+  if (k.includes("display") || k.includes("screen") || k.includes("resolution")) return Monitor;
+  if (k.includes("color")) return Palette;
+  if (k.includes("print") || k.includes("printer")) return Printer;
+  if (k.includes("connect") || k.includes("wifi") || k.includes("network")) return Wifi;
+  if (k.includes("paper") || k.includes("size")) return Maximize;
+  if (k.includes("scan")) return Scan;
+  if (k.includes("duplex")) return Box;
+  return Box;
+};
+
+const formatLabel = (key) => {
+  const result = key.replace(/([A-Z])/g, " $1");
+  return result.charAt(0).toUpperCase() + result.slice(1);
+};
+
+function ProductSpecifications({ product }) {
+  const specsObject = product?.specifications || {};
+  const specsEntries = Object.entries(specsObject).filter(([k, v]) => v !== undefined && v !== null && v !== "" && v !== "N/A");
+
+  if (specsEntries.length === 0) return null;
+
+  return (
+    <div className="mb-8">
+      <h3 className="mb-4 text-lg font-bold text-slate-900 border-b border-slate-200 pb-2">Specifications</h3>
+      <div className="flex flex-col">
+        {specsEntries.map(([key, value]) => (
+          <div key={key} className="flex py-2 border-b border-slate-100 last:border-0">
+            <span className="w-1/3 text-sm font-medium text-slate-500">{formatLabel(key)}</span>
+            <span className="w-2/3 text-sm font-semibold text-slate-900">{value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function ProductDetailsSkeleton() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
       <div className="mb-8 h-4 w-64 animate-pulse rounded bg-slate-200"></div>
-      
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
         <div className="aspect-[4/3] w-full animate-pulse rounded-3xl bg-slate-200 lg:aspect-square"></div>
-        
         <div className="flex flex-col pt-4">
           <div className="mb-4 h-4 w-32 animate-pulse rounded bg-slate-200"></div>
           <div className="mb-6 h-10 w-3/4 animate-pulse rounded bg-slate-200"></div>
-          
           <div className="mb-8 h-12 w-40 animate-pulse rounded bg-slate-200"></div>
-          
           <div className="space-y-3 mb-10">
             <div className="h-4 w-full animate-pulse rounded bg-slate-200"></div>
             <div className="h-4 w-full animate-pulse rounded bg-slate-200"></div>
             <div className="h-4 w-5/6 animate-pulse rounded bg-slate-200"></div>
           </div>
-          
           <div className="flex gap-4">
             <div className="h-14 w-32 animate-pulse rounded-full bg-slate-200"></div>
             <div className="h-14 flex-1 animate-pulse rounded-full bg-slate-200"></div>
@@ -45,18 +85,30 @@ function ProductDetails() {
   const { addToCart } = useCart();
   
   const [product, setProduct] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchProductAndRelated = async () => {
       try {
         setLoading(true);
         setError(false);
         const response = await api.get(`/products/${id}`);
-        setProduct(response.data.product);
+        const fetchedProduct = response.data.product;
+        setProduct(fetchedProduct);
+        setCurrentImageIndex(0);
+        setQuantity(1);
+
+        // Fetch related products
+        const relatedRes = await api.get(`/products?category=${fetchedProduct.category}`);
+        const filtered = relatedRes.data.products.filter(p => p._id !== fetchedProduct._id).slice(0, 4);
+        setRelatedProducts(filtered);
+
       } catch (err) {
         console.error(err);
         setError(true);
@@ -65,7 +117,7 @@ function ProductDetails() {
       }
     };
     
-    fetchProduct();
+    fetchProductAndRelated();
   }, [id]);
 
   const handleQuantityChange = (type) => {
@@ -118,20 +170,34 @@ function ProductDetails() {
     );
   }
 
+  const images = Array.isArray(product.images) && product.images.length > 0 
+    ? product.images 
+    : [product.image];
+
+  const hasDiscount = product.originalPrice && product.originalPrice > product.price;
+  const savings = hasDiscount ? product.originalPrice - product.price : 0;
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-slate-200">
       <Navbar />
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-        {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="mb-8 hidden sm:block">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
+        {/* Mobile Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900 lg:hidden"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
+
+        {/* Desktop Breadcrumb */}
+        <nav aria-label="Breadcrumb" className="mb-8 hidden lg:block">
           <ol className="flex items-center gap-2 text-sm text-slate-500">
-            <li>
-              <Link to="/home" className="transition hover:text-slate-900">Home</Link>
-            </li>
+            <li><Link to="/home" className="transition hover:text-slate-900">Home</Link></li>
             <li><ChevronRight className="h-4 w-4" /></li>
             <li>
-              <Link to={`/products/${product.category}/${product.brand}`} className="transition hover:text-slate-900 capitalize">
+              <Link to={`/products/${product.category}`} className="transition hover:text-slate-900 capitalize">
                 {product.category}
               </Link>
             </li>
@@ -142,156 +208,229 @@ function ProductDetails() {
               </Link>
             </li>
             <li><ChevronRight className="h-4 w-4" /></li>
-            <li className="font-medium text-slate-900" aria-current="page">
+            <li className="font-medium text-slate-900 truncate" aria-current="page">
               {product.name}
             </li>
           </ol>
         </nav>
-
-        {/* Mobile Back Button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900 sm:hidden"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </button>
 
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
           
           {/* LEFT: Image Gallery */}
           <section className="flex flex-col gap-4">
             <div className="group relative aspect-[4/3] w-full overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 lg:aspect-square">
-              <motion.img
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4 }}
-                src={product.image}
-                alt={product.name}
-                className="h-full w-full object-contain p-8 transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute left-6 top-6 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-slate-900 backdrop-blur ring-1 ring-slate-200">
-                {product.brand}
-              </div>
+              {product.isNewLaunch && (
+                <div className="absolute left-6 top-6 z-10 inline-flex items-center gap-1.5 rounded bg-slate-900 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-white">
+                  ★ NEW LAUNCH
+                </div>
+              )}
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={currentImageIndex}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  src={images[currentImageIndex]}
+                  alt={product.name}
+                  className="h-full w-full object-contain p-8"
+                />
+              </AnimatePresence>
             </div>
+            
+            {/* Thumbnails */}
+            {images.length > 1 && (
+              <div className="grid grid-cols-4 gap-4 sm:grid-cols-5">
+                {images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentImageIndex(idx)}
+                    className={`relative aspect-square overflow-hidden rounded-xl bg-white ring-1 transition-all ${
+                      currentImageIndex === idx 
+                        ? "ring-2 ring-slate-900 shadow-md" 
+                        : "ring-slate-200 hover:ring-slate-400 opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    <img src={img} alt={`Thumbnail ${idx + 1}`} className="h-full w-full object-contain p-2" />
+                  </button>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* RIGHT: Product Info */}
-          <section className="flex flex-col lg:py-6">
-            <div className="mb-2 flex items-center gap-2">
-              <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-slate-600">
-                {product.category}
+          <section className="flex flex-col">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-widest text-slate-700">
+                {product.brand}
               </span>
             </div>
 
-            <h1 className="mb-4 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl lg:text-5xl lg:leading-tight">
+            <h1 className="mb-4 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
               {product.name}
             </h1>
 
-            <div className="mb-8 flex items-end gap-3">
-              <span className="text-4xl font-bold tracking-tight text-slate-900">
-                ₹{Number(product.price).toLocaleString("en-IN")}
-              </span>
+            {/* Ratings */}
+            {product.rating && (
+              <div className="mb-6 flex items-center gap-2">
+                <div className="flex items-center text-amber-400">
+                  <span className="text-lg">★</span>
+                </div>
+                <span className="font-bold text-slate-700">{product.rating}</span>
+                {product.reviewCount && (
+                  <span className="text-sm text-slate-500 underline decoration-slate-300 underline-offset-4">
+                    ({product.reviewCount} Reviews)
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Pricing */}
+            <div className="mb-6 flex flex-col items-start gap-1">
+              <div className="flex items-end gap-3">
+                <span className="text-4xl font-bold tracking-tight text-slate-900">
+                  ₹{Number(product.price).toLocaleString("en-IN")}
+                </span>
+                {hasDiscount && (
+                  <span className="mb-1 text-lg text-slate-500 line-through">
+                    MRP ₹{Number(product.originalPrice).toLocaleString("en-IN")}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-slate-500">Inclusive of all taxes.</p>
+              {hasDiscount && (
+                <div className="mt-2 inline-flex items-center rounded-md bg-green-50 px-2.5 py-1 text-sm font-semibold text-green-700 ring-1 ring-inset ring-green-600/20">
+                  Save ₹{Number(savings).toLocaleString("en-IN")}
+                </div>
+              )}
             </div>
 
-            <div className="mb-8 border-y border-slate-200 py-6">
-              <p className="text-base leading-relaxed text-slate-600">
+            {/* Description */}
+            <div className="mb-8">
+              <p className="whitespace-pre-wrap text-base leading-relaxed text-slate-600">
                 {product.description}
               </p>
             </div>
 
-            {/* Quantity and CTA */}
+            {/* Delivery / Availability */}
+            <div className="mb-8 flex items-start gap-4 rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
+              <Truck className="mt-0.5 h-5 w-5 shrink-0 text-slate-700" />
+              <div>
+                <h4 className="font-semibold text-slate-900">Estimated Delivery</h4>
+                <p className="mt-1 text-sm text-slate-600">Available for your location. Usually ships within 2-3 business days.</p>
+              </div>
+            </div>
+
+            {/* Product Specifications */}
+            <ProductSpecifications product={product} />
+
+            {/* Actions: Quantity, Cart, Wishlist */}
             <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center">
-              <div className="flex h-14 w-32 items-center justify-between rounded-full bg-slate-100 px-1 shadow-sm ring-1 ring-slate-200">
+              <div className="flex h-14 w-32 shrink-0 items-center justify-between rounded-xl bg-white px-1 ring-1 ring-slate-200 shadow-sm">
                 <button
                   type="button"
                   onClick={() => handleQuantityChange("decrement")}
                   disabled={quantity <= 1}
-                  className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-white hover:text-slate-900 disabled:opacity-50 disabled:hover:bg-transparent focus:outline-none focus:ring-2 focus:ring-slate-900"
-                  aria-label="Decrease quantity"
+                  className="flex h-12 w-10 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50 disabled:hover:bg-transparent"
                 >
                   <Minus className="h-4 w-4" />
                 </button>
-                <span className="w-8 text-center text-sm font-semibold text-slate-900">
+                <span className="w-8 text-center text-sm font-bold text-slate-900">
                   {quantity}
                 </span>
                 <button
                   type="button"
                   onClick={() => handleQuantityChange("increment")}
                   disabled={quantity >= 10}
-                  className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-white hover:text-slate-900 disabled:opacity-50 disabled:hover:bg-transparent focus:outline-none focus:ring-2 focus:ring-slate-900"
-                  aria-label="Increase quantity"
+                  className="flex h-12 w-10 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50 disabled:hover:bg-transparent"
                 >
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
 
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={addingToCart}
-                className="group relative flex h-14 flex-1 items-center justify-center gap-2 overflow-hidden rounded-full bg-slate-950 px-8 text-sm font-semibold text-white transition-all hover:bg-slate-800 disabled:bg-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
-              >
-                <AnimatePresence mode="wait">
+              <div className="flex flex-1 gap-4">
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  disabled={addingToCart}
+                  className="group flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-8 text-sm font-bold text-white shadow-md transition hover:bg-blue-700 disabled:bg-slate-400"
+                >
                   {addingToCart ? (
-                    <motion.div
-                      key="loading"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="flex items-center gap-2"
-                    >
+                    <>
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
                       Adding...
-                    </motion.div>
+                    </>
                   ) : (
-                    <motion.div
-                      key="default"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="flex items-center gap-2"
-                    >
+                    <>
                       <ShoppingCart className="h-5 w-5 transition-transform group-hover:-rotate-12" />
                       Add to Cart
-                    </motion.div>
+                    </>
                   )}
-                </AnimatePresence>
-              </button>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setIsWishlisted(!isWishlisted)}
+                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white shadow-md ring-1 transition-all hover:scale-105 ${
+                    isWishlisted 
+                      ? "ring-red-200 text-red-500 bg-red-50" 
+                      : "ring-slate-200 text-slate-500 hover:text-red-500"
+                  }`}
+                  aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                >
+                  <Heart className={`h-6 w-6 ${isWishlisted ? "fill-red-500" : ""}`} />
+                </button>
+              </div>
             </div>
 
             {/* Trust Badges */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div className="flex flex-col items-center gap-2 rounded-2xl bg-white p-4 text-center ring-1 ring-slate-200">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50">
-                  <ShieldCheck className="h-5 w-5 text-slate-700" />
-                </div>
+              <div className="flex flex-col items-center gap-2 rounded-xl bg-slate-50 p-4 text-center ring-1 ring-slate-200">
+                <ShieldCheck className="h-6 w-6 text-slate-600" />
                 <div>
-                  <h4 className="text-xs font-semibold text-slate-900">Secure Payment</h4>
-                  <p className="mt-0.5 text-[10px] text-slate-500">100% protected</p>
+                  <h4 className="text-sm font-semibold text-slate-900">Secure Payment</h4>
+                  <p className="text-xs text-slate-500">100% protected</p>
                 </div>
               </div>
-              <div className="flex flex-col items-center gap-2 rounded-2xl bg-white p-4 text-center ring-1 ring-slate-200">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50">
-                  <Truck className="h-5 w-5 text-slate-700" />
-                </div>
+              <div className="flex flex-col items-center gap-2 rounded-xl bg-slate-50 p-4 text-center ring-1 ring-slate-200">
+                <Truck className="h-6 w-6 text-slate-600" />
                 <div>
-                  <h4 className="text-xs font-semibold text-slate-900">Fast Delivery</h4>
-                  <p className="mt-0.5 text-[10px] text-slate-500">2-3 working days</p>
+                  <h4 className="text-sm font-semibold text-slate-900">Fast Delivery</h4>
+                  <p className="text-xs text-slate-500">2-3 working days</p>
                 </div>
               </div>
-              <div className="flex flex-col items-center gap-2 rounded-2xl bg-white p-4 text-center ring-1 ring-slate-200">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50">
-                  <RotateCcw className="h-5 w-5 text-slate-700" />
-                </div>
+              <div className="flex flex-col items-center gap-2 rounded-xl bg-slate-50 p-4 text-center ring-1 ring-slate-200">
+                <RotateCcw className="h-6 w-6 text-slate-600" />
                 <div>
-                  <h4 className="text-xs font-semibold text-slate-900">Easy Returns</h4>
-                  <p className="mt-0.5 text-[10px] text-slate-500">30 days policy</p>
+                  <h4 className="text-sm font-semibold text-slate-900">Easy Returns</h4>
+                  <p className="text-xs text-slate-500">30 days policy</p>
                 </div>
               </div>
             </div>
           </section>
         </div>
+
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-16">
+            <h2 className="mb-8 text-2xl font-bold tracking-tight text-slate-900">Related Products</h2>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {relatedProducts.map(related => (
+                <ProductCard
+                  key={related._id}
+                  product={related}
+                  onViewDetails={() => navigate(`/product/${related._id}`)}
+                  onAddToCart={async (e) => {
+                    e.stopPropagation();
+                    await addToCart(related._id, 1);
+                  }}
+                  adding={false}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
       </main>
     </div>
   );
