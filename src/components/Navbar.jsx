@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { House, LogOut, Menu, ShoppingCart, UserCircle2, X } from "lucide-react";
+import { House, LogOut, Menu, ShoppingCart, UserCircle2, X, Package } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useCart } from "../context/useCart";
 
@@ -105,14 +105,23 @@ function Navbar() {
           )}
 
           {user ? (
-            <button
-              type="button"
-              onClick={logout}
-              className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </button>
+            <>
+              <Link
+                to="/my-orders"
+                className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-950"
+              >
+                <Package className="h-4 w-4" />
+                My Orders
+              </Link>
+              <button
+                type="button"
+                onClick={logout}
+                className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            </>
           ) : null}
         </div>
 
@@ -164,14 +173,24 @@ function Navbar() {
           </Link>
 
           {user ? (
-            <button
-              type="button"
-              onClick={logout}
-              className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </button>
+            <>
+              <Link
+                to="/my-orders"
+                onClick={closeMenu}
+                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                <Package className="h-4 w-4" />
+                My Orders
+              </Link>
+              <button
+                type="button"
+                onClick={logout}
+                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            </>
           ) : (
             <Link
               to="/login"

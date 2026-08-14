@@ -35,7 +35,7 @@ export const CartProvider = ({ children }) => {
     }
 
     try {
-      const response = await api.get(`/cart/${user.id}`);
+      const response = await api.get(`/cart`);
 
       setCart(response.data.cart);
     } catch (error) {
@@ -61,7 +61,7 @@ export const CartProvider = ({ children }) => {
     }
 
     try {
-      const response = await api.post(`/cart/${user.id}`, {
+      const response = await api.post(`/cart`, {
         productId,
         quantity,
       });
@@ -88,7 +88,7 @@ export const CartProvider = ({ children }) => {
     if (quantity < 1) return;
 
     try {
-      const response = await api.put(`/cart/${user.id}/${productId}`, {
+      const response = await api.put(`/cart/${productId}`, {
         quantity,
       });
 
@@ -108,7 +108,7 @@ export const CartProvider = ({ children }) => {
     }
 
     try {
-      const response = await api.delete(`/cart/${user.id}/${productId}`);
+      const response = await api.delete(`/cart/${productId}`);
 
       setCart(response.data.cart);
     } catch (error) {

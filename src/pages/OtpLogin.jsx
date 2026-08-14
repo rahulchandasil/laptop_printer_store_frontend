@@ -97,12 +97,15 @@ function OtpLogin() {
       if (response.data.success) {
         setSuccess(true);
         const user = response.data.user;
+        const token = response.data.token;
         
         setTimeout(() => {
           if (user.name && user.name.trim().length > 0) {
             localStorage.setItem("user", JSON.stringify(user));
+            localStorage.setItem("token", token);
             navigate("/home");
           } else {
+            localStorage.setItem("token", token);
             navigate("/complete-profile", { state: { userId: user.id } });
           }
         }, 1000);

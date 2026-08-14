@@ -11,6 +11,8 @@ import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import OtpLogin from "./pages/OtpLogin";
 import CompleteProfile from "./pages/CompleteProfile";
+import MyOrders from "./pages/MyOrders";
+import OrderDetails from "./pages/OrderDetails";
 
 function App() {
   return (
@@ -32,6 +34,9 @@ function App() {
 
         <Route path="/otp-login" element={<OtpLogin />} />
         <Route path="/complete-profile" element={<CompleteProfile />} />
+        
+        <Route path="/my-orders" element={<MyOrders />} />
+        <Route path="/my-orders/:orderId" element={<OrderDetails />} />
       </Routes>
     </BrowserRouter>
   );

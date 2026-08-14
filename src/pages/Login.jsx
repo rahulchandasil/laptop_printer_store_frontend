@@ -55,11 +55,14 @@ function Login() {
 
       const response = await api.post("/auth/login", formData);
       const user = response.data.user;
+      const token = response.data.token;
       
       if (user.name && user.name.trim().length > 0) {
         localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("token", token);
         navigate("/home");
       } else {
+        localStorage.setItem("token", token); // Complete profile might need the token
         navigate("/complete-profile", { state: { userId: user.id } });
       }
     } catch (error) {
@@ -79,11 +82,14 @@ function Login() {
       });
 
       const user = response.data.user;
+      const token = response.data.token;
       
       if (user.name && user.name.trim().length > 0) {
         localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("token", token);
         navigate("/home");
       } else {
+        localStorage.setItem("token", token);
         navigate("/complete-profile", { state: { userId: user.id } });
       }
     } catch (err) {

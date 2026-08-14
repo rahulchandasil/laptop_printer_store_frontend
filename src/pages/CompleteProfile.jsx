@@ -37,6 +37,9 @@ function CompleteProfile() {
 
       if (response.data.success) {
         localStorage.setItem("user", JSON.stringify(response.data.user));
+        if (response.data.token) {
+          localStorage.setItem("token", response.data.token);
+        }
         navigate("/home");
       }
     } catch (err) {
