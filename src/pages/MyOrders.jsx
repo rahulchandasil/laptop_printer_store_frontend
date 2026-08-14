@@ -172,6 +172,9 @@ function MyOrders() {
                               src={productImage} 
                               alt={productName}
                               className="h-full w-full object-cover"
+                              onError={(e) => {
+                                e.target.src = "https://placehold.co/400?text=Unavailable";
+                              }}
                             />
                           </div>
                           <div className="flex-1">

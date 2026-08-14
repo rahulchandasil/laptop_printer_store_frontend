@@ -4,6 +4,7 @@ import { ArrowLeft, AlertCircle, MapPin, Package, CreditCard, ChevronLeft, Check
 import Navbar from "../components/Navbar";
 import api from "../services/api";
 import { useCart } from "../context/useCart";
+import { useToast } from "../context/ToastContext";
 
 function OrderDetailsSkeleton() {
   return (
@@ -151,6 +152,7 @@ function OrderDetails() {
   const [error, setError] = useState("");
   const [reordering, setReordering] = useState(false);
   const { fetchCart } = useCart();
+  const { addToast } = useToast();
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -186,14 +188,14 @@ function OrderDetails() {
       const availableItems = order.items.filter(item => item.productId !== null);
       
       if (availableItems.length === 0) {
-        alert("Sorry, none of the products in this order are available anymore.");
+        addToast("Sorry, none of the products in this order are available anymore.", "error");
         setReordering(false);
         return;
       }
 
       // Add to cart sequentially to prevent race conditions on cart.save()
       for (const item of availableItems) {
-        await api.post(`/cart/${user.id}`, {
+        await api.post(`/cart`, {
           productId: item.productId._id || item.productId,
           quantity: item.quantity
         });
@@ -204,9 +206,10 @@ function OrderDetails() {
         await fetchCart();
       }
       
+      addToast("Items successfully added to your cart.", "success");
       navigate("/cart");
     } catch (err) {
-      alert("Failed to add some items to your cart. Please try again.");
+      addToast("Failed to add some items to your cart. Please try again.", "error");
       console.error("Order again error:", err);
     } finally {
       setReordering(false);
@@ -352,6 +355,9 @@ function OrderDetails() {
                           src={productImage} 
                           alt={productName}
                           className="h-full w-full object-cover"
+                          onError={(e) => {
+                            e.target.src = "https://placehold.co/400?text=Unavailable";
+                          }}
                         />
                       </div>
                       <div className="flex flex-1 flex-col">

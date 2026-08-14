@@ -85,34 +85,44 @@ function HomeHero({ onBrowseLaptops, onBrowsePrinters, heroProducts = [] }) {
           initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 20 }}
           animate={shouldReduceMotion ? undefined : { opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
-          className="relative lg:ml-auto w-full max-w-lg"
+          className="relative lg:ml-auto w-full max-w-lg flex flex-col gap-6"
         >
-          {/* Main Hero Image */}
+          {/* Main Hero Image & Details */}
           <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/50">
-            <div className="relative aspect-[4/3] w-full bg-slate-100/50 p-8">
+            <div className="relative aspect-[4/3] w-full bg-slate-100/50 p-6 sm:p-8">
               {currentProduct ? (
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={currentProduct._id}
-                    initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
-                    animate={shouldReduceMotion ? undefined : { opacity: 1, scale: 1, y: 0 }}
-                    exit={shouldReduceMotion ? false : { opacity: 0, scale: 1.05, y: -10 }}
-                    transition={{ duration: 0.5, ease: "easeInOut" }}
-                    className="absolute inset-0 flex flex-col items-center justify-center p-8"
+                    initial={shouldReduceMotion ? false : { opacity: 0, x: 20 }}
+                    animate={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
+                    exit={shouldReduceMotion ? false : { opacity: 0, x: -20 }}
+                    transition={{ duration: 0.4, ease: "easeInOut" }}
+                    className="absolute inset-0 flex flex-col items-center justify-center p-6"
                   >
                     <img
                       src={currentProduct.image}
                       alt={currentProduct.name}
-                      className="h-full w-full object-contain drop-shadow-xl"
+                      className="h-48 sm:h-56 w-auto object-contain drop-shadow-xl mb-4"
                       onError={(e) => {
                         e.target.style.display = 'none';
                         e.target.parentElement.innerHTML = '<div class="flex h-full items-center justify-center text-slate-400">Image Unavailable</div>';
                       }}
                     />
-                    <div className="absolute bottom-6 left-6 right-6 flex justify-center">
-                      <span className="inline-block rounded-full bg-white/90 px-4 py-2 text-sm font-bold text-slate-900 shadow-sm backdrop-blur">
+                    
+                    <div className="w-full mt-auto rounded-2xl bg-white/90 p-4 shadow-sm backdrop-blur border border-slate-100 text-center">
+                      <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
+                        {currentProduct.brand} • {currentProduct.category}
+                      </p>
+                      <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate">
                         {currentProduct.name}
-                      </span>
+                      </h3>
+                      <p className="mt-1 text-sm text-slate-500 line-clamp-1">
+                        {currentProduct.description}
+                      </p>
+                      <p className="mt-2 text-lg font-black text-slate-900">
+                        ₹{currentProduct.price?.toLocaleString('en-IN')}
+                      </p>
                     </div>
                   </motion.div>
                 </AnimatePresence>
@@ -129,23 +139,12 @@ function HomeHero({ onBrowseLaptops, onBrowsePrinters, heroProducts = [] }) {
               )}
             </div>
             
-            {/* Floating feature badge */}
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.8 }}
-              className="absolute -bottom-6 -left-6 hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-xl sm:block"
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-green-600">
-                  <Sparkles className="h-6 w-6" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-900">Top Rated</p>
-                  <p className="text-xs text-slate-500">By our customers</p>
-                </div>
+            {/* Progress Indicator */}
+            {heroProducts && heroProducts.length > 1 && (
+              <div className="absolute top-4 right-4 flex items-center justify-center rounded-full bg-white/80 px-3 py-1 text-xs font-bold text-slate-700 shadow-sm backdrop-blur">
+                {String(currentIndex + 1).padStart(2, '0')} / {String(heroProducts.length).padStart(2, '0')}
               </div>
-            </motion.div>
+            )}
           </div>
         </motion.div>
       </div>

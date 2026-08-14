@@ -134,7 +134,7 @@ function Cart() {
             </Link>
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8">
+          <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8 relative pb-28 lg:pb-0">
             {/* LEFT: Cart Items */}
             <div className="lg:col-span-7 xl:col-span-8">
               <div className="hidden border-b border-slate-200 pb-4 sm:grid sm:grid-cols-12 sm:gap-4">
@@ -167,6 +167,9 @@ function Cart() {
                               src={product.image}
                               alt={product.name}
                               className="h-full w-full object-cover"
+                              onError={(e) => {
+                                e.target.src = "https://placehold.co/200x200?text=No+Image";
+                              }}
                             />
                           </div>
                           <div className="flex flex-col justify-center">
@@ -293,6 +296,23 @@ function Cart() {
                     Secure Checkout
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Mobile Sticky Checkout Bar */}
+            <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white/80 p-4 shadow-[0_-8px_16px_-4px_rgba(0,0,0,0.1)] backdrop-blur-md lg:hidden pb-safe">
+              <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Payment</span>
+                  <span className="text-xl font-black text-slate-900">₹{subtotal.toLocaleString("en-IN")}</span>
+                </div>
+                <button
+                  onClick={() => navigate("/checkout")}
+                  className="flex flex-1 max-w-[200px] items-center justify-center gap-2 rounded-full bg-blue-600 py-3.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700"
+                >
+                  Checkout
+                  <ArrowRight className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </div>

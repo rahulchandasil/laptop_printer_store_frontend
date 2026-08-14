@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { ArrowRight, ShoppingCart, Heart, ChevronLeft, ChevronRight, Cpu, HardDrive, Monitor, Palette, Box, Activity, Printer, Wifi, Maximize, Scan } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ArrowRight, ShoppingCart, ChevronLeft, ChevronRight, Cpu, HardDrive, Monitor, Palette, Box, Activity, Printer, Wifi, Maximize, Scan, Eye, Check } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import QuickViewModal from "./QuickViewModal";
 
 const getIconForKey = (key) => {
   const k = key.toLowerCase();
@@ -58,7 +59,7 @@ function ProductSpecifications({ product }) {
             e.stopPropagation();
             setExpanded(!expanded);
           }}
-          className="mt-3 text-sm font-semibold text-blue-600 hover:text-blue-700 focus:outline-none"
+          className="mt-3 text-sm font-semibold text-slate-600 hover:text-slate-900 focus:outline-none"
         >
           {expanded ? "− View Less" : "+ View More"}
         </button>
@@ -70,8 +71,22 @@ function ProductSpecifications({ product }) {
 function ProductCard({ product, onAddToCart, onViewDetails, adding }) {
   const shouldReduceMotion = useReducedMotion();
   const [imageFailed, setImageFailed] = useState(false);
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+  
+  // "Added" animation state
+  const [justAdded, setJustAdded] = useState(false);
+  const prevAddingRef = useRef(adding);
+
+  useEffect(() => {
+    // If it was adding and now is NOT adding, trigger the success checkmark
+    if (prevAddingRef.current === true && adding === false) {
+      setJustAdded(true);
+      const timer = setTimeout(() => setJustAdded(false), 2000);
+      return () => clearTimeout(timer);
+    }
+    prevAddingRef.current = adding;
+  }, [adding]);
 
   const images = Array.isArray(product.images) && product.images.length > 0 
     ? product.images 
@@ -86,10 +101,15 @@ function ProductCard({ product, onAddToCart, onViewDetails, adding }) {
     e.stopPropagation();
     setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
-
-  const toggleWishlist = (e) => {
+  
+  const handleAddToCart = (e) => {
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
+    onAddToCart(product._id);
+  };
+
+  const handleQuickView = (e) => {
+    e.stopPropagation();
+    setIsQuickViewOpen(true);
   };
 
   const hasDiscount = product.originalPrice && product.originalPrice > product.price;
@@ -97,156 +117,168 @@ function ProductCard({ product, onAddToCart, onViewDetails, adding }) {
   const discountPercent = hasDiscount ? Math.round((savings / product.originalPrice) * 100) : 0;
 
   return (
-    <motion.article
-      whileHover={shouldReduceMotion ? undefined : { y: -4 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md h-full"
-    >
-      <div 
-        onClick={onViewDetails}
-        className="relative block cursor-pointer bg-white pt-4 px-4"
+    <>
+      <motion.article
+        whileHover={shouldReduceMotion ? undefined : { y: -4 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        className="group flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all hover:shadow-xl hover:shadow-slate-200/50 h-full"
       >
-        {/* Badges */}
-        <div className="absolute left-4 top-4 z-10 flex flex-col gap-2">
-          {product.isNewLaunch && (
-            <span className="inline-flex items-center gap-1 rounded bg-slate-900 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
-              ★ NEW LAUNCH
-            </span>
-          )}
-          {!product.isNewLaunch && hasDiscount && (
-            <span className="inline-flex items-center rounded bg-red-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-red-700">
-              {discountPercent}% OFF
-            </span>
-          )}
-        </div>
-
-        {/* Wishlist */}
-        <button
-          type="button"
-          onClick={toggleWishlist}
-          className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-slate-400 shadow-sm backdrop-blur transition hover:bg-white hover:text-red-500"
-          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-        >
-          <Heart className={`h-4 w-4 ${isWishlisted ? "fill-red-500 text-red-500" : ""}`} />
-        </button>
-
-        {/* Image Gallery */}
-        <div className="relative aspect-[4/3] w-full overflow-hidden bg-white">
-          {!imageFailed ? (
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={currentImageIndex}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                src={images[currentImageIndex]}
-                alt={product.name}
-                loading="lazy"
-                onError={() => setImageFailed(true)}
-                className="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
-              />
-            </AnimatePresence>
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-slate-50 text-sm text-slate-400">
-              Image unavailable
-            </div>
-          )}
-
-          {/* Navigation Arrows */}
-          {images.length > 1 && (
-            <>
-              <button
-                type="button"
-                onClick={handlePrevImage}
-                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-1.5 text-slate-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-slate-900 opacity-0 group-hover:opacity-100"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={handleNextImage}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-1.5 text-slate-600 shadow-sm backdrop-blur transition hover:bg-white hover:text-slate-900 opacity-0 group-hover:opacity-100"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-1 flex-col p-5">
         <div 
           onClick={onViewDetails}
-          className="cursor-pointer mb-2"
+          className="relative block cursor-pointer bg-white pt-4 px-4"
         >
-          <h3 className="line-clamp-2 text-[15px] font-semibold leading-tight text-slate-900 group-hover:text-blue-600 transition-colors">
-            {product.name}
-          </h3>
-        </div>
-
-        {/* Ratings */}
-        {product.rating && (
-          <div className="mb-3 flex items-center gap-1.5">
-            <div className="flex items-center text-amber-400">
-              {/* Simple star render based on rating */}
-              <span className="text-sm">★</span>
-            </div>
-            <span className="text-sm font-bold text-slate-700">{product.rating}</span>
-            {product.reviewCount && (
-              <span className="text-xs text-slate-500">({product.reviewCount} Ratings)</span>
+          {/* Badges */}
+          <div className="absolute left-4 top-4 z-10 flex flex-col gap-2">
+            {product.isNewLaunch && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-950 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+                ★ NEW
+              </span>
             )}
-          </div>
-        )}
-
-        {/* Pricing */}
-        <div className="mt-auto pt-2">
-          <div className="flex items-baseline gap-2">
-            <span className="text-xl font-bold text-slate-900">
-              ₹{Number(product.price).toLocaleString("en-IN")}
-            </span>
-            {hasDiscount && (
-              <span className="text-sm text-slate-500 line-through">
-                ₹{Number(product.originalPrice).toLocaleString("en-IN")}
+            {!product.isNewLaunch && hasDiscount && (
+              <span className="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-red-700">
+                {discountPercent}% OFF
               </span>
             )}
           </div>
+
+          {/* Quick View Floating Button */}
+          <button
+            type="button"
+            onClick={handleQuickView}
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-600 shadow-sm backdrop-blur transition hover:bg-slate-900 hover:text-white opacity-0 group-hover:opacity-100 focus:outline-none focus:opacity-100"
+            aria-label="Quick View"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+
+          {/* Image Gallery */}
+          <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-50/50 rounded-2xl">
+            {!imageFailed ? (
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={currentImageIndex}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  src={images[currentImageIndex]}
+                  alt={product.name}
+                  loading="lazy"
+                  onError={() => setImageFailed(true)}
+                  className="h-full w-full object-contain p-6 transition-transform duration-500 group-hover:scale-105"
+                />
+              </AnimatePresence>
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-sm text-slate-400">
+                <img src="https://placehold.co/400x300?text=No+Image" alt="Fallback" className="h-full w-full object-contain p-6 opacity-50" />
+              </div>
+            )}
+
+            {/* Navigation Arrows */}
+            {images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={handlePrevImage}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-600 shadow-sm backdrop-blur transition hover:bg-slate-900 hover:text-white opacity-0 group-hover:opacity-100 focus:outline-none focus:opacity-100"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextImage}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-600 shadow-sm backdrop-blur transition hover:bg-slate-900 hover:text-white opacity-0 group-hover:opacity-100 focus:outline-none focus:opacity-100"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-1 flex-col p-6 pt-4">
+          <div className="mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              {product.brand}
+            </span>
+          </div>
           
-          {hasDiscount && (
-            <p className="mt-0.5 text-xs font-semibold text-green-600">
-              Save ₹{Number(savings).toLocaleString("en-IN")}
-            </p>
+          <div 
+            onClick={onViewDetails}
+            className="cursor-pointer mb-2"
+          >
+            <h3 className="line-clamp-2 text-base font-bold leading-tight text-slate-900 group-hover:text-slate-600 transition-colors">
+              {product.name}
+            </h3>
+          </div>
+
+          {/* Ratings */}
+          {product.rating && (
+            <div className="mb-3 flex items-center gap-1.5">
+              <div className="flex items-center text-slate-900">
+                <span className="text-sm">★</span>
+              </div>
+              <span className="text-sm font-bold text-slate-700">{product.rating}</span>
+              {product.reviewCount && (
+                <span className="text-xs font-medium text-slate-500">({product.reviewCount} Ratings)</span>
+              )}
+            </div>
           )}
-          <p className="mt-1 text-[11px] text-slate-500">Inclusive of all taxes.</p>
+
+          {/* Dynamic Specifications */}
+          <div className="mb-4">
+            <ProductSpecifications product={product} />
+          </div>
+
+          {/* Pricing & Actions */}
+          <div className="mt-auto">
+            <div className="mb-4">
+              <div className="flex items-baseline gap-2">
+                <span className="text-xl font-black text-slate-900">
+                  ₹{Number(product.price).toLocaleString("en-IN")}
+                </span>
+                {hasDiscount && (
+                  <span className="text-sm font-medium text-slate-400 line-through">
+                    ₹{Number(product.originalPrice).toLocaleString("en-IN")}
+                  </span>
+                )}
+              </div>
+              
+              {hasDiscount && (
+                <p className="mt-1 text-xs font-bold text-emerald-600">
+                  Save ₹{Number(savings).toLocaleString("en-IN")}
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={adding || justAdded}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-slate-800 disabled:bg-slate-800 disabled:opacity-90 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
+              >
+                {adding ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                ) : justAdded ? (
+                  <>
+                    <Check className="h-4 w-4" /> Added
+                  </>
+                ) : (
+                  "Add to Cart"
+                )}
+              </button>
+            </div>
+          </div>
         </div>
+      </motion.article>
 
-        {/* Delivery */}
-        <div className="mt-3 rounded bg-slate-50 p-2">
-          <p className="text-xs font-medium text-slate-700">Estimated Delivery</p>
-          <p className="text-[11px] text-slate-500">Typically delivers in 3-5 business days</p>
-        </div>
-
-        {/* Dynamic Specifications */}
-        <ProductSpecifications product={product} />
-
-        {/* Add to Cart Button */}
-        <button
-          type="button"
-          onClick={onAddToCart}
-          disabled={adding}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
-        >
-          {adding ? (
-            "Adding..."
-          ) : (
-            <>
-              <ShoppingCart className="h-4 w-4" />
-              Add to Cart
-            </>
-          )}
-        </button>
-      </div>
-    </motion.article>
+      <QuickViewModal 
+        product={product} 
+        isOpen={isQuickViewOpen} 
+        onClose={() => setIsQuickViewOpen(false)} 
+      />
+    </>
   );
 }
 

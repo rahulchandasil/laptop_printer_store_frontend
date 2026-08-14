@@ -71,27 +71,44 @@ function Navbar() {
           </Link>
 
           <Link
+            to="/brands/laptop"
+            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-950"
+          >
+            Laptops
+          </Link>
+          
+          <Link
+            to="/brands/printer"
+            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-950"
+          >
+            Printers
+          </Link>
+
+          <Link
             to="/cart"
             className="relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-950"
           >
             <ShoppingCart className="h-4 w-4" />
             Cart
-            {cartCount > 0 ? (
-              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-slate-950 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+            {cartCount > 0 && (
+              <motion.span 
+                key={cartCount}
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                className="inline-flex min-w-5 items-center justify-center rounded-full bg-slate-950 px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-sm"
+              >
                 {cartCount}
-              </span>
-            ) : null}
+              </motion.span>
+            )}
           </Link>
 
           {user ? (
-            <div className="ml-2 flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-3 py-2">
+            <div className="ml-2 flex items-center gap-3 rounded-full border border-slate-200 bg-white/50 px-3 py-1.5 shadow-sm">
               <UserCircle2 className="h-5 w-5 text-slate-500" />
               <div className="leading-tight">
                 <p className="text-sm font-medium text-slate-950">
-                  {user.name ? `Hi, ${user.name}` : "User"}
-                </p>
-                <p className="text-xs text-slate-500">
-                  {user.email}
+                  {user.name ? `Hi, ${user.name.split(' ')[0]}` : "User"}
                 </p>
               </div>
             </div>
@@ -150,26 +167,48 @@ function Navbar() {
           <Link
             to="/home"
             onClick={closeMenu}
-            className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
           >
             <House className="h-4 w-4" />
             Home
           </Link>
 
           <Link
+            to="/brands/laptop"
+            onClick={closeMenu}
+            className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+          >
+            Laptops
+          </Link>
+          
+          <Link
+            to="/brands/printer"
+            onClick={closeMenu}
+            className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+          >
+            Printers
+          </Link>
+
+          <Link
             to="/cart"
             onClick={closeMenu}
-            className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
           >
             <span className="flex items-center gap-3">
               <ShoppingCart className="h-4 w-4" />
               Cart
             </span>
-            {cartCount > 0 ? (
-              <span className="rounded-full bg-slate-950 px-2.5 py-1 text-[10px] font-semibold text-white">
+            {cartCount > 0 && (
+              <motion.span 
+                key={cartCount}
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                className="rounded-full bg-slate-950 px-2.5 py-1 text-[10px] font-semibold text-white shadow-sm"
+              >
                 {cartCount}
-              </span>
-            ) : null}
+              </motion.span>
+            )}
           </Link>
 
           {user ? (
@@ -177,7 +216,7 @@ function Navbar() {
               <Link
                 to="/my-orders"
                 onClick={closeMenu}
-                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 <Package className="h-4 w-4" />
                 My Orders

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import api from "../services/api";
 import { CartContext } from "./cartContext";
+import { useToast } from "./ToastContext";
 
 export const CartProvider = ({ children }) => {
+  const { addToast } = useToast();
   const [cart, setCart] = useState({
     items: [],
   });
@@ -56,7 +58,7 @@ export const CartProvider = ({ children }) => {
     const user = getUser();
 
     if (!user?.id) {
-      alert("Please login first");
+      addToast("Please login first to add items to cart.", "error");
       return;
     }
 
@@ -68,11 +70,11 @@ export const CartProvider = ({ children }) => {
 
       setCart(response.data.cart);
 
-      alert("Product added to cart");
+      addToast("Product added to cart successfully.", "success");
     } catch (error) {
       console.error("Add to cart error:", error);
 
-      alert(error.response?.data?.message || "Failed to add product");
+      addToast(error.response?.data?.message || "Failed to add product", "error");
     }
   };
 
@@ -81,7 +83,7 @@ export const CartProvider = ({ children }) => {
     const user = getUser();
 
     if (!user?.id) {
-      alert("Please login first");
+      addToast("Please login first", "error");
       return;
     }
 
@@ -95,6 +97,7 @@ export const CartProvider = ({ children }) => {
       setCart(response.data.cart);
     } catch (error) {
       console.error("Update cart error:", error);
+      addToast("Failed to update quantity", "error");
     }
   };
 
@@ -103,7 +106,7 @@ export const CartProvider = ({ children }) => {
     const user = getUser();
 
     if (!user?.id) {
-      alert("Please login first");
+      addToast("Please login first", "error");
       return;
     }
 
@@ -111,8 +114,10 @@ export const CartProvider = ({ children }) => {
       const response = await api.delete(`/cart/${productId}`);
 
       setCart(response.data.cart);
+      addToast("Item removed from cart", "info");
     } catch (error) {
       console.error("Remove cart error:", error);
+      addToast("Failed to remove item", "error");
     }
   };
 
