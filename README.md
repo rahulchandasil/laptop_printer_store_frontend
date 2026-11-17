@@ -2,7 +2,7 @@
 
 A responsive, production-ready frontend web application for a **Laptop & Printer Retail and Repair Store**, built with **React + Vite**. Designed for real-world business operations, the platform allows customers to browse laptops, printers, and accessories, filter by specifications, manage their shopping cart, and submit service/repair inquiries.
 
-🔗 **Live Demo:** [Add Your Live Demo URL Here]  
+🔗 **Live Demo:** [https://laptop-printer-store-frontend.vercel.app/]  
 ⚙️ **Backend Repository:** [laptop_printer_store-backend](https://github.com)
 
 ---
